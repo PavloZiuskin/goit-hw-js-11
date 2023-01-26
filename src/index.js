@@ -15,6 +15,10 @@ refs.btnMore.addEventListener('click', onLoadMoreClick);
 let clikcMore = 1;
 let perPage = 40;
 
+let simpleL = new SimpleLightbox('.gallery a', {
+  captionDelay: 250,
+});
+
 async function onSearchSubmit(e) {
   try {
     e.preventDefault();
@@ -39,6 +43,7 @@ async function onSearchSubmit(e) {
         }
         clearGalleryMarkup();
         loadMoreCards(data.hits);
+        simpleL.refresh();
         Notify.success(`Hooray! We found ${data.totalHits} images.`);
         refs.btnMore.classList.remove('visually-hidden');
       })
@@ -65,6 +70,7 @@ async function onLoadMoreClick() {
         }
 
         loadMoreCards(data.hits);
+        simpleL.refresh();
       })
       .catch(err => Notify.failure(err));
   } catch {
@@ -121,10 +127,6 @@ function loadMoreCards(cards) {
     )
     .join('');
   refs.gallery.insertAdjacentHTML('beforeend', loadMarkup);
-  let simpleL = new SimpleLightbox('.gallery a', {
-    captionDelay: 250,
-  });
-  simpleL.refresh();
 }
 function clearGalleryMarkup() {
   refs.gallery.innerHTML = '';
