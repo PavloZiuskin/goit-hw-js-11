@@ -10,8 +10,8 @@ const refs = {
   input: document.querySelector('.search-write'),
 };
 
-refs.form.addEventListener('submit', onSearchSubmit);
-refs.btnMore.addEventListener('click', onLoadMoreClick);
+refs.form.addEventListener('submit', onFormSubmit);
+refs.btnMore.addEventListener('click', onLoadMoreButtonClick);
 let clikcMore = 1;
 let perPage = 40;
 
@@ -19,62 +19,56 @@ let simpleL = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
 });
 
-async function onSearchSubmit(e) {
+async function onFormSubmit(e) {
+  e.preventDefault();
+  clikcMore = 1;
+
+  refs.btnMore.classList.add('visually-hidden');
+  const eTarget = e.currentTarget.elements;
+  const val = eTarget.searchQuery.value.trim();
+
+  if (val === '') {
+    Notify.warning('Sorry, please entre a correct word');
+    return;
+  }
   try {
-    e.preventDefault();
-    clikcMore = 1;
+    const { hits, totalHits } = await fetchApi(val, clikcMore);
 
-    refs.btnMore.classList.add('visually-hidden');
-    const eTarget = e.currentTarget.elements;
-    const val = eTarget.searchQuery.value.trim();
-
-    if (val === '') {
-      Notify.warning('Sorry, please entre a correct word');
+    if (hits.length === 0) {
+      Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
       return;
     }
-
-    await fetchApi(val, clikcMore)
-      .then(data => {
-        if (data.hits.length === 0) {
-          Notify.failure(
-            'Sorry, there are no images matching your search query. Please try again.'
-          );
-          return;
-        }
-        clearGalleryMarkup();
-        loadMoreCards(data.hits);
-        simpleL.refresh();
-        Notify.success(`Hooray! We found ${data.totalHits} images.`);
-        refs.btnMore.classList.remove('visually-hidden');
-      })
-      .catch(err => Notify.failure(err));
+    clearGalleryMarkup();
+    loadMoreCards(hits);
+    simpleL.refresh();
+    Notify.success(`Hooray! We found ${totalHits} images.`);
+    refs.btnMore.classList.remove('visually-hidden');
   } catch {
-    console.error();
+    console.error(error);
   }
 }
 
-async function onLoadMoreClick() {
+async function onLoadMoreButtonClick() {
+  clikcMore += 1;
+  perPage += 40;
+  const val = refs.input.value.trim();
   try {
-    clikcMore += 1;
-    perPage += 40;
-    const val = refs.input.value.trim();
+    const { hits, totalHits } = await fetchApi(val, clikcMore);
 
-    await fetchApi(val, clikcMore)
-      .then(data => {
-        if (perPage > data.totalHits) {
-          refs.btnMore.classList.add('visually-hidden');
-          Notify.warning(
-            'We are sorry, but you have reached the end of search results.'
-          );
-          return;
-        }
+    if (perPage > totalHits) {
+      refs.btnMore.classList.add('visually-hidden');
+      Notify.warning(
+        'We are sorry, but you have reached the end of search results.'
+      );
+      return;
+    }
 
-        loadMoreCards(data.hits);
-        simpleL.refresh();
-      })
-      .catch(err => Notify.failure(err));
+    loadMoreCards(hits);
+    simpleL.refresh();
   } catch {
-    console.error();
+    console.error(error);
   }
 }
 
