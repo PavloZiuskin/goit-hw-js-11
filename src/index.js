@@ -22,6 +22,7 @@ let simpleL = new SimpleLightbox('.gallery a', {
 async function onFormSubmit(e) {
   e.preventDefault();
   clikcMore = 1;
+  perPage = 40;
 
   refs.btnMore.classList.add('visually-hidden');
   const eTarget = e.currentTarget.elements;
@@ -35,6 +36,7 @@ async function onFormSubmit(e) {
     const { hits, totalHits } = await fetchApi(val, clikcMore);
 
     if (hits.length === 0) {
+      clearGalleryMarkup();
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
